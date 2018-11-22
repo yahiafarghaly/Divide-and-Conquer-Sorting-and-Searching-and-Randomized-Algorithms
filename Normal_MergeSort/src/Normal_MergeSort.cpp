@@ -20,15 +20,16 @@ void merge_sorted_arrays(
 		int merged_sorted_arr[],
 		int arr_size);
 
+void split_array(int arr[],int arr_size, int* out_left_halve,int* out_right_halve);
 void show_array(int* arr, int n);
 
 int main() {
 
-	int a[] = {4,3,2,1};
+	int a[] = {4,3,2,1,0,8,10,11};
 	int b[4] = {0};
 
-	mergeSort(a,4,b);
-	show_array(b,4);
+	mergeSort(a,8,b);
+	show_array(b,8);
 	return 0;
 }
 
@@ -72,34 +73,33 @@ void merge_sorted_arrays(
 	}
 }
 
-void split_merge(int unsorted_arr[],
-		int* begin_iter,
-		int* end_iter,
-		int arr_size,
-		int sorted_arr[])
+void split_array(int arr[],int arr_size, int* out_left_halve,int* out_right_halve)
 {
-	if(arr_size == 1)
-		return; // consider it sorted.
-
-	int* middle_iter;
-	middle_iter = begin_iter + arr_size/2 - 1; // refer to the end of the left halve.
-	split_merge(unsorted_arr,begin_iter,middle_iter,arr_size/2,sorted_arr); // left branch.
-	split_merge(unsorted_arr,middle_iter + 1,end_iter,arr_size/2,sorted_arr); // right branch
-
-	merge_sorted_arrays(begin_iter,middle_iter + 1,sorted_arr,arr_size);
+	for(int i = 0; i < arr_size/2; i++)
+		out_left_halve[i] = arr [i];
+	for(int i = arr_size/2; i < arr_size; i++)
+		out_right_halve [i - arr_size/2] = arr[i];
 }
+
 
 void mergeSort(
 		int unsorted_arr[],
 		int arr_size,
 		int out_sorted_arr[])
 {
+	if(arr_size == 1)
+	{
+		out_sorted_arr[0] = unsorted_arr[0];
+		return;
+	}
+	int left_arr [arr_size/2] = {0};
+	int right_arr [arr_size/2] = {0};
+	split_array(unsorted_arr,arr_size,&left_arr[0],&right_arr[0]);
 
-	split_merge(unsorted_arr,
-			&unsorted_arr[0],
-			&unsorted_arr[arr_size - 1],
-			arr_size,
-			out_sorted_arr);
+	mergeSort(left_arr,arr_size/2,left_arr);
+	mergeSort(right_arr,arr_size/2,right_arr);
+
+	merge_sorted_arrays(left_arr,right_arr,out_sorted_arr,arr_size);
 }
 
 
