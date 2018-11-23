@@ -7,99 +7,96 @@
 //============================================================================
 
 #include <iostream>
+#include <fstream>
 using namespace std;
 
-void mergeSort(
-		int unsorted_arr[],
-		int arr_size,
-		int out_sorted_arr[]);
 
-void merge_sorted_arrays(
-		int sorted_arr_1[],
-		int sorted_arr_2[],
-		int merged_sorted_arr[],
-		int arr_size);
 
-void split_array(int arr[],int arr_size, int* out_left_halve,int* out_right_halve);
+void mergeSort(int in_arr[],int first_idx,int last_idx);
 void show_array(int* arr, int n);
 
 int main() {
 
-	int a[] = {4,3,2,1,0,8,10,11};
-	int b[4] = {0};
+	int a[100000] = { 0 };
+	int sz = 0;
+	std::fstream in_file("./src/IntegerArray.txt", std::ios_base::in);
 
-	mergeSort(a,8,b);
-	show_array(b,8);
+	while(in_file >> a[sz])
+	{
+		++sz;
+	}
+	cout << "The read size is = " << sz << endl;
+
+	mergeSort(a,0,sz - 1);
+	show_array(a,sz);
 	return 0;
 }
 
-/*
- * Input: `sorted_arr_1` & `sorted_arr_2` must have the same size which is equal to `arr_size`/2
- * Output: `merged_sorted_arr` of size `arr_size`
- * */
+
 void merge_sorted_arrays(
-		int sorted_arr_1[],
-		int sorted_arr_2[],
-		int merged_sorted_arr[],
-		int arr_size)
+		int in_arr[],
+		int f_idx,
+		int m_idx,
+		int e_idx)
 {
 	int i,j,k;
-	i = j = 0;
-	for(k = 0; k < arr_size; ++k)
+	int arr_sorted [e_idx - f_idx + 1] = { 0 };
+	i = f_idx;
+	j = m_idx + 1;
+	k = 0; // idx of arr_sorted.
+
+	while(i <= m_idx && j <= e_idx)
 	{
-		if(sorted_arr_1[i] <= sorted_arr_2[j] && i < arr_size/2)
+		if(in_arr[i] <= in_arr[j])
 		{
-			merged_sorted_arr[k] = sorted_arr_1[i];
+				arr_sorted[k] = in_arr[i];
 				++i;
 		}
-		else if (sorted_arr_1[i] > sorted_arr_2[j] && j < arr_size/2)
+		else
 		{
-			merged_sorted_arr[k] = sorted_arr_2[j];
+				arr_sorted[k] = in_arr[j];
 				++j;
 		}
+		++k;
 	}
 
-	// Append any left elements in any of the sorted arrays.
-	if(i < arr_size/2)
+	// Append any left elements in any of the halves.
+	while(i <= m_idx)
 	{
-		for(k = i + arr_size/2; k < arr_size; ++k,++i)
-			merged_sorted_arr[k] = sorted_arr_1[i];
+			arr_sorted[k] = in_arr[i];
+			++k;
+			++i;
 	}
 
-	if(j < arr_size/2)
+	while(j <= e_idx)
 	{
-		for(k = j + arr_size/2; k < arr_size; ++k,++j)
-			merged_sorted_arr[k] = sorted_arr_2[j];
+			arr_sorted[k] = in_arr[j];
+			++k;
+			++j;
 	}
-}
 
-void split_array(int arr[],int arr_size, int* out_left_halve,int* out_right_halve)
-{
-	for(int i = 0; i < arr_size/2; i++)
-		out_left_halve[i] = arr [i];
-	for(int i = arr_size/2; i < arr_size; i++)
-		out_right_halve [i - arr_size/2] = arr[i];
-}
+    //copy the merged temporary array to the original array
+    for(k = 0, i = f_idx; i <= e_idx; ++i, ++k)
+        	in_arr[i] = arr_sorted[k];
 
+}
 
 void mergeSort(
-		int unsorted_arr[],
-		int arr_size,
-		int out_sorted_arr[])
+		int in_arr[],
+		int first_idx,
+		int last_idx
+		)
 {
-	if(arr_size == 1)
-	{
-		out_sorted_arr[0] = unsorted_arr[0];
-		return;
-	}
-	int left_arr [arr_size/2] = {0};
-	int right_arr [arr_size/2] = {0};
-	split_array(unsorted_arr,arr_size,&left_arr[0],&right_arr[0]);
 
-	mergeSort(left_arr,arr_size/2,left_arr);
-	mergeSort(right_arr,arr_size/2,right_arr);
+	if(last_idx == first_idx)
+		return; // 0 or 1 element ==> consider it sorted.
 
-	merge_sorted_arrays(left_arr,right_arr,out_sorted_arr,arr_size);
+	int mid_idx = (last_idx + first_idx) >> 1;
+	mergeSort(in_arr,first_idx,mid_idx); // left
+	mergeSort(in_arr,mid_idx + 1, last_idx); // right
+
+	merge_sorted_arrays(in_arr,first_idx,mid_idx,last_idx);
+
 }
 
 
