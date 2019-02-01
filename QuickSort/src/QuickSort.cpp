@@ -8,24 +8,35 @@
  ============================================================================
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 
+#include <iostream>
+#include <fstream>
+using namespace std;
 
 void showArray(int A[],int sz)
 {
 	for(int i = 0; i < sz; ++i)
-		printf("%d ",A[i]);
+		printf("%d\n",A[i]);
 	printf("\n");
 }
 
 void quickSort(int A[],int s_idx, int l_idx);
 
 int main(void) {
-	int A[] = {3,8,2,5,1,4,7,6};
 
-	quickSort(A,0,8);
-	showArray(A,9);
+	int A[100000] = { -1 };
+	int index = 0;
+
+	std::fstream in_file("./src/input_arrays/quick_sort_data.txt", std::ios_base::in);
+
+	while(in_file >> A[index])
+	{
+		++index;
+	}
+	cout << "The read size is = " << index << endl;
+
+	quickSort(A,0,index - 1);
+	showArray(A,index);
 
 	return EXIT_SUCCESS;
 }
