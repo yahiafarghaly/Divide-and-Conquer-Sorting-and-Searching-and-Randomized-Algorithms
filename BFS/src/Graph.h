@@ -11,6 +11,7 @@
 #include <list>
 #include <queue>
 #include <map>
+#include <memory>
 
 template <class T>
 class Graph {
@@ -28,6 +29,7 @@ public:
 
 	void BFS(T s);
 	unsigned long find_ShortestPath(T s, T const &d);
+	std::list<Graph<T>> getConnectedComponents(void);
 	virtual ~Graph();
 };
 
@@ -179,6 +181,50 @@ unsigned long Graph<T>::find_ShortestPath(T s, T const &d)
 
 	// Distance(d) = i (i.e d is in i_th layer, shortest #edges from s to d).
 	return distance[d];
+}
+
+template <class T>
+std::list<Graph<T>> Graph<T>::getConnectedComponents(void)
+{
+	std::map<T,bool> v_discovery;
+	for(auto v : this->adjacencyList)
+		v_discovery[v.first] = false;
+
+	std::queue<T> vQ;
+	T s;
+	std::list<Graph<T>> connectedComponents;
+	std::shared_ptr<Graph<T>>G_Component;
+
+	for(auto v : this->adjacencyList)
+	{
+		s = v.first;
+
+		if(!v_discovery[s])
+		{
+			G_Component = std::make_shared<Graph<T>>();
+			v_discovery[s] = true;
+			vQ.push(s);
+			while(!vQ.empty())
+			{
+				s = vQ.front();
+				vQ.pop();
+				std::cout << "Vertex [ " << s << " ] is visited\n";
+				auto edges = this->adjacencyList[s];
+				for(auto w : edges)
+				{
+					G_Component->addEdge(s,w);
+					if(!v_discovery[w])
+					{
+						v_discovery[w] = true;
+						vQ.push(w);
+					}
+				}
+			}
+			connectedComponents.push_back(*G_Component);
+		}
+	}
+
+	return connectedComponents;
 }
 
 template <class T>

@@ -36,11 +36,35 @@ int main() {
     g.addEdge('e', 'c');
     g.addEdge('e', 'd');
 
+    /* NOT CONNECTED*/
+    g.addEdge('F','G');
 
-    g.printGraphAdjacenyList();
+    g.addEdge('G','F');
+    g.addEdge('G','H');
+
+    g.addEdge('H','G');
+
+    /* NOT CONNECTED */
+    g.addEdge('M','N');
+
+    g.addEdge('N','M');
+    g.addEdge('N','N');
+
+
+
+    /*g.printGraphAdjacenyList();
     g.BFS('s');
 
-    g.find_ShortestPath('s','e');
+    g.find_ShortestPath('s','e');*/
+
+    std::list<Graph<char>> cg = g.getConnectedComponents();
+
+    for(auto graph : cg)
+    {
+    	std::cout << "A CONNECTED COMPONENT\n";
+    	graph.printGraphAdjacenyList();
+    	std::cout << "###########################################\n";
+    }
 
 
 	return 0;
