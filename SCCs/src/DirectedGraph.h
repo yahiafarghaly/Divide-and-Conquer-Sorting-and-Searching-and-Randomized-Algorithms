@@ -35,8 +35,9 @@ class DirectedGraph {
 	FinishingTimeList<T> 	ftList;
 	VertexLeaderList<T> 	vLeaderList;
 
-	unsigned long __ft;
-	unsigned long __vleader;
+	unsigned long 	__ft;
+	unsigned long 	__vleader;
+	bool 			__calculateLeaders;
 
 
 	void __DFS(T const&, std::map<T,bool>&,AdjacencyList<T>& );
@@ -118,8 +119,12 @@ std::map<T,std::list<T>> DirectedGraph<T>::reverseGraph()
 	std::shared_ptr<AdjacencyList<T>> revAdjList = std::make_shared<AdjacencyList<T>>();
 
 	for(auto v : this->adjacencyList)
+	{
+		if(v.second.empty());
+			// Needs somethinking to get it right but for now, it doesn't affect on the final result !
 		for(auto w : v.second)
 			(*revAdjList)[w].push_back(v.first);
+	}
 
 	return *revAdjList;
 }
@@ -132,7 +137,8 @@ void DirectedGraph<T>::__DFS(T const& v, std::map<T,bool>& v_discovery,Adjacency
 	v_discovery[v] = true;
 	printVisited(v);
 
-	this->vLeaderList[v] = this->__vleader;
+	if(this->__calculateLeaders)
+		this->vLeaderList[this->__vleader] += 1 ; // we calculate it early to accelerate the final result.
 
 	auto edges = adlist[v];
 	for(auto w : edges)
@@ -159,6 +165,8 @@ void DirectedGraph<T>::DFS_loop(AdjacencyList<T>& adlist)
 		if(!v_discovery[(*v).first])
 		{
 			__vleader = (*v).first;
+			if(this->__calculateLeaders)
+				this->vLeaderList[this->__vleader] = 0;
 			__DFS((*v).first,v_discovery,adlist);
 		}
 	}
@@ -170,6 +178,7 @@ std::vector<unsigned long> DirectedGraph<T>::SSCs()
 	std::vector<unsigned long> SSCsList;
 	this->ftList.clear();
 	this->vLeaderList.clear();
+	this->__calculateLeaders = false;
 
 	// Run DFS_loop on Grev to get finishing time.
 	auto revAdjacencyList = this->reverseGraph();
@@ -181,47 +190,27 @@ std::vector<unsigned long> DirectedGraph<T>::SSCs()
 
 	// Make another G with original directions and set vertex names to finishing times
 	// to use DFS-loop to run on it in decreasing order.
-
 	AdjacencyList<unsigned long> G_original_ft;
 	for(auto v : this->adjacencyList)
+	{
+		if(v.second.empty())
+			G_original_ft[this->ftList[v.first]];
 		for(auto w : v.second)
 			G_original_ft[this->ftList[v.first]].push_back(this->ftList[w]);
-			//this->adjacencyList[this->ftList[v.first]] = this->ftList[w];
+	}
 
+	this->__calculateLeaders = true;
 	DFS_loop(G_original_ft);
-	//DFS_loop(this->adjacencyList);
-
-//	for(auto v : this->vLeaderList)
-//		std::cout << "V_l["<< v.first << "]: " << v.second << "\n";
-
 
 	// Free some memory here
 	revAdjacencyList.clear();
 	G_original_ft.clear();
 
-	std::map<T,bool> visited;
-	for(auto v : this->vLeaderList)
-		visited[v.first] = false;
+//	for(auto v : this->vLeaderList)
+//		std::cout << "V_l["<< v.first << "]: " << v.second << "\n";
 
 	for(auto v : this->vLeaderList)
-	{
-		if(!visited[v.first])
-		{
-			auto v_count = std::count_if(this->vLeaderList.begin(),this->vLeaderList.end(),
-					[&v,&visited,&SSCsList](std::pair<T,unsigned long> vertex){
-					if(v.second == vertex.second)
-					{
-						visited[vertex.first] = true;
-						return true;
-					}
-					else
-						return false;
-			});
-			//std::cout << "V ["<< v.first << "]: " << v_count << "\n";
-			SSCsList.push_back(v_count);
-		}
-	}
-
+		SSCsList.push_back(v.second);
 
 	while(SSCsList.size() < 5)
 		SSCsList.push_back(0);

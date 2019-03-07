@@ -21,16 +21,24 @@ void readGraphFile(string file_path,DirectedGraph<T>& G);
 int main() {
 
 	DirectedGraph<unsigned long> g;
-	//readGraphFile("./src/lecture_graph.txt",g);
+//	readGraphFile("./src/lecture_graph.txt",g); // pass
 	readGraphFile("./src/SCC.txt",g);
+//	readGraphFile("./src/directed_g1.txt",g); // pass
+//	readGraphFile("./src/input_mostlyCycles_68_320000.txt",g); // pass
 //	g.printGraphAdjacenyList();
 //	g.DFS(8);
 //	auto rAdjList = g.reverseGraph();
 //	g.printGraphAdjacenyList(rAdjList);
 	auto SCCs_size = g.SSCs();
 
+	int i = 0;
 	for(auto s : SCCs_size)
+	{
+		++i;
 		std::cout << s << " ";
+		if(i == 5)
+			break;
+	}
 	std::cout << "\n";
 
 
@@ -61,7 +69,9 @@ void readGraphFile(string file_path,DirectedGraph<T>& G)
 				vertices.push_back(vertexName);
 			}
 		}
-
-		G.addArc(vertices[0],vertices[1]);
+		if(vertices.size() == 1)
+			G.addVertex(vertices[0]);
+		else
+			G.addArc(vertices[0],vertices[1]);
 	}
 }
