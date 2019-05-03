@@ -16,6 +16,7 @@
 #include <chrono>
 #include <unordered_map>
 #include <thread>
+#include "hashtable.h"
 
 
 
@@ -27,6 +28,8 @@ std::vector<int64_t> readInputData(std::string path);
 
 int numberOfTarget_hash_unorderMap_with_threads(std::vector<int64_t>& numbers, std::vector<int64_t>& t);
 int numberOfTarget_hash_unorderMap(std::vector<int64_t>& numbers, std::vector<int64_t>& t);
+int numberOfTarget_hash(std::vector<int64_t>& numbers, std::vector<int64_t>& t);
+int numberOfTarget_hash_threads(std::vector<int64_t>& numbers, std::vector<int64_t>& t);
 
 
 int main() {
@@ -40,6 +43,14 @@ int main() {
 	auto numberOfTargets = 0;
 
 
+	std::cout<< "home_hash_sol_threads: \n";
+	begin = std::chrono::steady_clock::now();
+	numberOfTargets =  numberOfTarget_hash_threads(numbers,t);
+	end = std::chrono::steady_clock::now();
+	std::cout << "Time = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << " sec" <<std::endl;
+	std::cout << numberOfTargets << std::endl;
+	std::cout << "----------------------------\n";
+
 	std::cout<< "unorder_map_sol_threads: \n";
 	std::cout<< "Input File: " << input_file << "\n";
 	begin = std::chrono::steady_clock::now();
@@ -49,17 +60,98 @@ int main() {
 	std::cout << numberOfTargets << std::endl;
 	std::cout << "----------------------------\n";
 
-	// std::cout<< "unorder_map_sol: \n";
-	// begin = std::chrono::steady_clock::now();
-	// numberOfTargets =  numberOfTarget_hash_unorderMap(numbers,t);
-	// end = std::chrono::steady_clock::now();
-	// std::cout << "Time = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << " sec" <<std::endl;
-	// std::cout << numberOfTargets << std::endl;
-	// std::cout << "----------------------------\n";
+	std::cout<< "unorder_map_sol: \n";
+	begin = std::chrono::steady_clock::now();
+	numberOfTargets =  numberOfTarget_hash_unorderMap(numbers,t);
+	end = std::chrono::steady_clock::now();
+	std::cout << "Time = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << " sec" <<std::endl;
+	std::cout << numberOfTargets << std::endl;
+	std::cout << "----------------------------\n";
 
-
+	std::cout<< "home_hash_sol: \n";
+	begin = std::chrono::steady_clock::now();
+	numberOfTargets =  numberOfTarget_hash(numbers,t);
+	end = std::chrono::steady_clock::now();
+	std::cout << "Time = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << " sec" <<std::endl;
+	std::cout << numberOfTargets << std::endl;
+	std::cout << "----------------------------\n";
 
 	return 0;
+}
+
+int numberOfTarget_hash_threads(std::vector<int64_t>& numbers, std::vector<int64_t>& t)
+{
+	Hashtable<int64_t> h(numbers.size());
+
+	const size_t nthreads = std::thread::hardware_concurrency();
+    std::vector<std::thread> threads(nthreads);
+    std::vector<long> 		numberOfTargets(nthreads,0);
+    std::cout<<"Parallel ("<<nthreads<<" threads)"<<std::endl;
+
+	for(auto num : numbers)
+		h.insert(num);
+
+	auto findTarget = [&](int64_t const& t)->bool{
+		for(auto x : numbers)
+		{
+			if(x != t - x)
+			{
+				if(h.lookup(t - x))
+					return true;
+			}
+		}
+		return false;
+	};
+
+	unsigned long target_idx = 0;
+	unsigned long thread_idx = 0;
+
+	while(target_idx < t.size())
+	{
+		while(thread_idx < nthreads)
+		{
+			threads[thread_idx] = std::thread([&](unsigned long const& threadIdx){
+				if(findTarget(t[target_idx + threadIdx]))
+					++numberOfTargets[threadIdx];
+			},thread_idx);
+			++thread_idx;
+		}
+
+		std::for_each(threads.begin(),threads.end(),[](std::thread& x){x.join();});
+		target_idx += nthreads;
+		thread_idx = 0;
+	}
+
+	return std::accumulate(numberOfTargets.begin(),numberOfTargets.end(),0);
+}
+
+int numberOfTarget_hash(std::vector<int64_t>& numbers, std::vector<int64_t>& t)
+{
+	Hashtable<int64_t> h(numbers.size());
+	int noTargets = 0;
+
+	for(auto num : numbers)
+		h.insert(num);
+
+	auto findTarget = [&](int64_t const& t)->bool{
+		for(auto x : numbers)
+		{
+			if(x != t - x)
+			{
+				if(h.lookup(t - x))
+					return true;
+			}
+		}
+		return false;
+	};
+
+	for(auto target : t)
+	{
+		if(findTarget(target))
+			noTargets++;
+	}
+
+	return noTargets;
 }
 
 int numberOfTarget_hash_unorderMap(std::vector<int64_t>& numbers, std::vector<int64_t>& t)

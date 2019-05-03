@@ -9,137 +9,123 @@
 #define HASHTABLE_H_
 
 #include <type_traits>
-#include <vector>
+#include <list>
+#include <iostream>
 #include <string>
 
-template<typename KeyType, typename ValueType>
+template<typename KeyType>
 class Hashtable
 {
 private:
 	unsigned long long hashtable_sz;
-	std::vector<std::vector<ValueType>*> hashtable;
+	std::list<KeyType> * hashtable;
 	unsigned long long hashfunction(KeyType const& key);
 
 public:
 	Hashtable(unsigned long long sz);
-	void insert(KeyType const& key,ValueType const& value);
+	~Hashtable();
+	void insert(KeyType const& key);
 	void deleteKey(KeyType const& key);
 	bool lookup(KeyType const& key);
-	bool lookup(KeyType const& key,ValueType const& value);
 	size_t recordCount(KeyType const& key);
+	size_t size() const
+	{
+		return hashtable_sz;
+	}
 	void showHashTable();
 
 };
 
-template<typename KeyType, typename ValueType>
-Hashtable<KeyType,ValueType>::Hashtable(unsigned long long sz)
+template<typename KeyType>
+Hashtable<KeyType>::Hashtable(unsigned long long sz)
 {
 	hashtable_sz =sz;
-	hashtable.resize(sz);
-	for(auto vectPtr : hashtable)
-		vectPtr = nullptr;
+	hashtable = new std::list<KeyType>[hashtable_sz];
 }
 
-template<typename KeyType, typename ValueType>
-void Hashtable<KeyType,ValueType>::insert(KeyType const& key,ValueType const& value)
+template<typename KeyType>
+Hashtable<KeyType>::~Hashtable()
+{
+	delete [] hashtable;
+}
+
+template<typename KeyType>
+void Hashtable<KeyType>::insert(KeyType const& key)
 {
 	auto pos = hashfunction(key);
-	if(hashtable[pos] == nullptr)
+	if(hashtable[pos].empty())
 	{
-		hashtable[pos] = new std::vector<ValueType>();
-		hashtable[pos]->push_back(value);
+		(hashtable[pos]).push_back(key);
 	}
 	else
-		hashtable[pos]->push_back(value);
+		(hashtable[pos]).push_back(key);
 }
 
 
 
-template<typename KeyType, typename ValueType>
-void Hashtable<KeyType,ValueType>::deleteKey(KeyType const& key)
+template<typename KeyType>
+void Hashtable<KeyType>::deleteKey(KeyType const& key)
 {
 	auto pos = hashfunction(key);
-	if(hashtable[pos] == nullptr)
+	if(hashtable[pos].empty())
 		return;
 
-	delete  hashtable[pos];
-	hashtable[pos] = nullptr;
-}
-
-template<typename KeyType, typename ValueType>
-bool Hashtable<KeyType,ValueType>::lookup(KeyType const& key)
-{
-	auto pos = hashfunction(key);
-	if(hashtable[pos] == nullptr)
-		return false;
-	else
-		return true;
+	for (auto it = hashtable[pos].begin();
+			it != hashtable[pos].end(); it++) {
+		if (*it == key)
+		{
+			hashtable[pos].erase(it);
+			break;
+		}
+	}
 }
 
 
-template<typename KeyType, typename ValueType>
-bool Hashtable<KeyType,ValueType>::lookup(KeyType const& key,ValueType const& value)
+
+template<typename KeyType>
+bool Hashtable<KeyType>::lookup(KeyType const& key)
 {
 	auto pos = hashfunction(key);
-	if(hashtable[pos] == nullptr)
+	if(hashtable[pos].empty())
 		return false;
 	else
 	{
-		for(int i = 0; i < hashtable[pos]->size(); i++)
-		{
-			if(hashtable[pos]->at(i) == value)
+		for (auto it = hashtable[pos].begin();
+				it != hashtable[pos].end(); it++) {
+			if (*it == key)
+			{
 				return true;
+			}
 		}
 		return false; // ? Weird at this point.
 	}
 }
 
-template<typename KeyType, typename ValueType>
-unsigned long long Hashtable<KeyType,ValueType>::hashfunction(KeyType const& key)
+template<typename KeyType>
+unsigned long long Hashtable<KeyType>::hashfunction(KeyType const& key)
 {
-	if(std::is_same<KeyType,std::string>::value)
-	{
-		// Do some actions to convert string to integer.
-	}
-
-	auto keyValue = key;
-	unsigned long long pos;
-
-	if(keyValue < 0 )
-		pos = (keyValue*2*-1) % hashtable_sz;
-	else
-		pos = key % hashtable_sz;
-
-	return pos;
+	return key % hashtable_sz;
 }
 
 
-template<typename KeyType, typename ValueType>
-size_t Hashtable<KeyType,ValueType>::recordCount(KeyType const& key)
+template<typename KeyType>
+size_t Hashtable<KeyType>::recordCount(KeyType const& key)
 {
 	auto pos = hashfunction(key);
-	if(hashtable[pos] == nullptr)
+	if(hashtable[pos].empty())
 		return 0;
 
-	return hashtable[pos]->size();
+	return hashtable[pos].size();
 }
 
-template<typename KeyType, typename ValueType>
-void Hashtable<KeyType,ValueType>::showHashTable()
+template<typename KeyType>
+void Hashtable<KeyType>::showHashTable()
 {
-	std::cout << "keyHashed : records \n";
-	unsigned long long pos = 0;
-	for(auto vect : hashtable)
-	{
-		std::cout << "["<< pos << "]: ";
-		if(vect != nullptr)
-		{	for(size_t i = 0; i < vect->size();i++)
-			{
-				std::cout << vect->at(i) << " ";
-			}
-		}
-		std::cout << "\n";
-		pos++;
+	for (int i = 0; i < hashtable_sz; i++) {
+		std::cout << i;
+		for (auto x : hashtable[i])
+			std::cout << " --> " << x;
+		std::cout << std::endl;
 	}
 }
 
