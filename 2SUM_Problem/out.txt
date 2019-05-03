@@ -1,0 +1,2 @@
+unorder_map_sol: 
+Parallel (1 threads)
